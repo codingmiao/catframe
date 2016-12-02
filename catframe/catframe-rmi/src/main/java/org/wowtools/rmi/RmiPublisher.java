@@ -6,8 +6,6 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 
 import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.KeeperException.NodeExistsException;
 
 /**
  * 发布服务端service
