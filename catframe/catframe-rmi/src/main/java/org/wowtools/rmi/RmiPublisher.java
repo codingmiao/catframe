@@ -54,7 +54,7 @@ public class RmiPublisher {
 	 */
 	public void publish(String name, Remote servie) {
 		try {
-			Naming.rebind("rmi://" + url +"/"+ name, servie);
+			Naming.bind("rmi://" + url +"/"+ name, servie);
 			if (null != zku) {
 				try {
 					zku.createNode(ZK_REGISTRY_PATH + "/" + name, null, CreateMode.PERSISTENT);
