@@ -2,20 +2,23 @@ import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import org.wowtools.rmi.Publisher;
+import org.wowtools.rmi.RmiPublisher;
 import org.wowtools.rmi.RmiClient;
+import org.wowtools.rmi.RmiClient.ZkServiceGetter;
 
 public class RmiTest {
-	public static void main(String[] args) throws RemoteException {
+	public static void main(String[] args) throws Exception {
 		int port = 1233;
 		String ip = "127.0.0.1";
 		String name = "helloService";
+		String zkUrl = "127.0.0.1:2181";
 		//启动服务端
-		new Publisher(ip,port).publish(name, new HelloServiceImpl());
+		new RmiPublisher(ip,port,zkUrl,null).publish(name, new HelloServiceImpl());
 		
 		//远程调用
-		HelloService hs = RmiClient.getService(ip, port, name);
-		String s = hs.sayHello("world");
+		ZkServiceGetter<HelloService> getter = RmiClient.getServiceGetter(zkUrl, name);
+		HelloService hs = getter.getService();
+		String s = hs.sayHello("World");
 		System.out.println(s);
 	}
 }
