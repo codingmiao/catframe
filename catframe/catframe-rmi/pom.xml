@@ -3,8 +3,8 @@
   <parent>
     <groupId>org.wowtools</groupId>
     <artifactId>catframe</artifactId>
-    <version>1.0</version>
+    <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <artifactId>catframe-common</artifactId>
-  <description>自用框架-通用</description>
+  <artifactId>catframe-rmi</artifactId>
+  <description>基于rmi和zookeeper的远程调用框架</description>
 </project>

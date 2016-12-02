@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.wowtools</groupId>
 		<artifactId>catframe</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>1.0</version>
 	</parent>
 	<artifactId>catframe-dao</artifactId>
 	<description>自用框架-数据库操作</description>
@@ -13,7 +13,7 @@
 		<dependency>
 			<groupId>org.wowtools</groupId>
 			<artifactId>catframe-common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

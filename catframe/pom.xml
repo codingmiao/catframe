@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.wowtools</groupId>
 	<artifactId>catframe</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0</version>
 	<packaging>pom</packaging>
 	<name>catframe</name>
 	<description>wowtools自用框架</description>
@@ -11,6 +11,8 @@
 		<module>catframe-common</module>
 		<module>catframe-dao</module>
 		<module>catframe-servicebase</module>
+		
+		<module>catframe-rmi</module>
 	</modules>
 
 	<dependencies>
