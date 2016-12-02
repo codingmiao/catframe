@@ -22,6 +22,13 @@ public class RmiPublisher {
 	public RmiPublisher(String localUrl, int port, String zkUrl, Integer zkSessionTimeOut) {
 		this(localUrl, port);
 		zku = new ZookeeperUtil(zkUrl, zkSessionTimeOut);
+		try {
+			zku.createNode(ZK_REGISTRY_PATH, null, CreateMode.PERSISTENT);
+		} catch (Exception e) {
+			if(e.getMessage().indexOf("NodeExists")<0){
+				throw e;
+			}
+		}
 	}
 
 	public RmiPublisher(int port) {
@@ -50,7 +57,7 @@ public class RmiPublisher {
 			Naming.rebind("rmi://" + url +"/"+ name, servie);
 			if (null != zku) {
 				try {
-					zku.createNode(ZK_REGISTRY_PATH + "/" + name, url.getBytes(), CreateMode.PERSISTENT);
+					zku.createNode(ZK_REGISTRY_PATH + "/" + name, null, CreateMode.PERSISTENT);
 				} catch (Exception e) {
 					if(e.getMessage().indexOf("NodeExists")<0){
 						throw e;
