@@ -20,13 +20,15 @@ public class RmiClient {
 		private final String zkPath;
 		private final String name;
 		private String[] serviceUrls;
+		private T[] services;
 
+		@SuppressWarnings("unchecked")
 		private ZkServiceGetter(String zkUrl, String name) {
 			this.name = name;
 			ZookeeperUtil zku;
 			synchronized (zkuMap) {
 				zku = zkuMap.get(zkUrl);
-				if(null==zku){
+				if (null == zku) {
 					zku = new ZookeeperUtil(zkUrl, null);
 					zkuMap.put(zkUrl, zku);
 				}
@@ -38,6 +40,7 @@ public class RmiClient {
 					if (event.getType() == Event.EventType.NodeChildrenChanged) {
 						List<String> nodeList = zku1.watchChildren(zkPath, this);
 						serviceUrls = toServiceUrls(zku1.getZk(), nodeList);
+						services = (T[]) new Object[serviceUrls.length];
 					}
 				}
 
@@ -45,6 +48,7 @@ public class RmiClient {
 			zkPath = RmiPublisher.ZK_REGISTRY_PATH + "/" + name;
 			List<String> nodeList = zku.watchChildren(zkPath, watcher);
 			serviceUrls = toServiceUrls(zku.getZk(), nodeList);
+			services = (T[]) new Object[serviceUrls.length];
 		}
 
 		private String[] toServiceUrls(ZooKeeper zk, List<String> nodeList) {
@@ -63,11 +67,23 @@ public class RmiClient {
 		}
 
 		public T getService() {
+			// 取缓存服务
+			if (services != null && services.length > 0) {
+				int i = r.nextInt(serviceUrls.length);
+				T res = services[i];
+				if (res != null) {
+					return res;
+				}
+			}
+			// 没取到则取远程服务
 			if (serviceUrls == null || serviceUrls.length == 0) {
 				throw new RuntimeException("暂无可用服务:" + zkPath);
 			}
-			String url = serviceUrls[r.nextInt(serviceUrls.length)];
-			return RmiClient.getService(url, name);
+			int i = r.nextInt(serviceUrls.length);
+			String url = serviceUrls[i];
+			T res = RmiClient.getService(url, name);
+			services[i] = res;
+			return res;
 		}
 	}
 
@@ -88,8 +104,8 @@ public class RmiClient {
 			throw new RuntimeException(e);
 		}
 	}
-	
-	public static <T> ZkServiceGetter<T> getServiceGetter(String zkUrl, String name){
+
+	public static <T> ZkServiceGetter<T> getServiceGetter(String zkUrl, String name) {
 		ZkServiceGetter<T> getter = new ZkServiceGetter<>(zkUrl, name);
 		return getter;
 	}
