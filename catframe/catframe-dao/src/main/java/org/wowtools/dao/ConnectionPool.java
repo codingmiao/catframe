@@ -23,7 +23,7 @@ public class ConnectionPool {
 	private String dataSourceName;
 
 	public synchronized static ConnectionPool getOrInitInstance(String cfgPath) {
-		String cfg = ResourcesReader.read(ConnectionPool.class, cfgPath);
+		String cfg = ResourcesReader.readStr(ConnectionPool.class, cfgPath);
 		JSONObject jsonCfg = new JSONObject(cfg);
 		return getOrInitInstance(jsonCfg);
 	}
