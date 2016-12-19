@@ -40,7 +40,11 @@ public class BufferPool<T> {
 	 * @param obj
 	 */
 	public void add(T obj) {
-		queue.add(obj);
+		try {
+			queue.put(obj);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**

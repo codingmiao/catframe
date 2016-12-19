@@ -40,6 +40,19 @@ public class SqlUtil {
 
 		}
 	}
+	
+	/**
+	 * 简化的ResultSet遍历器，只有visit部分,以便使用labmbda表达式
+	 * 
+	 * @author liuyu
+	 *
+	 */
+	@FunctionalInterface
+	public static interface SimpleJdbcResultVisitor {
+
+		public void visit(ResultSet rs) throws SQLException;
+
+	}
 
 	/**
 	 * 执行hql CUD命令
@@ -226,6 +239,16 @@ public class SqlUtil {
 		queryWithJdbc(conn, v, sql, args);
 		return v.res;
 	}
+	
+	public static void queryWithJdbc(Connection conn, SimpleJdbcResultVisitor simpleRsVisitor, String sql, Object... args) {
+		JdbcResultVisitor rsVisitor = new JdbcResultVisitor() {
+			@Override
+			public void visit(ResultSet rs) throws SQLException {
+				simpleRsVisitor.visit(rs);
+			}
+		};
+		queryWithJdbc(conn, rsVisitor, sql, args);
+	}
 
 	public static void queryWithJdbc(Connection conn, JdbcResultVisitor rsVisitor, String sql, Object... args) {
 
@@ -245,7 +268,6 @@ public class SqlUtil {
 			}
 			rsVisitor.afterLoop(rs);
 		} catch (Exception e) {
-			System.out.println(sql);
 			throw new RuntimeException(e);
 		} finally {
 			if (null != rs) {
