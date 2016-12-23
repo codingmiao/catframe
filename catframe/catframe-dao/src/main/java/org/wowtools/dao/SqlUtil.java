@@ -40,7 +40,7 @@ public class SqlUtil {
 
 		}
 	}
-	
+
 	/**
 	 * 简化的ResultSet遍历器，只有visit部分,以便使用labmbda表达式
 	 * 
@@ -83,7 +83,6 @@ public class SqlUtil {
 
 			return query.executeUpdate();
 		} catch (Exception e) {
-			e.printStackTrace();
 			throw new RuntimeException("执行异常,sql:" + sql, e);
 		}
 	}
@@ -167,9 +166,7 @@ public class SqlUtil {
 	 * @return
 	 */
 	public static int[] batchUpdate(Connection conn, String sql, Collection<Object[]> paramValues, boolean closeConn) {
-		if(log.isDebugEnabled()){
-			log.debug("SqlUtil batchUpdate:\t" + sql + "\t params:" + paramValues.size());
-		}
+		log.debug("SqlUtil batchUpdate:\t{}\t params:{}", sql, paramValues.size());
 		PreparedStatement pstm = null;
 		try {
 			conn.setAutoCommit(false);
@@ -239,8 +236,9 @@ public class SqlUtil {
 		queryWithJdbc(conn, v, sql, args);
 		return v.res;
 	}
-	
-	public static void queryWithJdbc(Connection conn, SimpleJdbcResultVisitor simpleRsVisitor, String sql, Object... args) {
+
+	public static void queryWithJdbc(Connection conn, SimpleJdbcResultVisitor simpleRsVisitor, String sql,
+			Object... args) {
 		JdbcResultVisitor rsVisitor = new JdbcResultVisitor() {
 			@Override
 			public void visit(ResultSet rs) throws SQLException {
