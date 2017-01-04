@@ -51,7 +51,6 @@ public class AsyncTaskUtil {
 	 * 批量执行任务
 	 * @param tasks
 	 * @param wait 是否等待所有任务执行完毕
-	 * @return
 	 */
 	public static void executeAsynTasks(List<Runnable> tasks,boolean wait){
 		if(!wait){

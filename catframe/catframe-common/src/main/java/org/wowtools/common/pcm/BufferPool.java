@@ -9,7 +9,6 @@ import java.util.concurrent.LinkedTransferQueue;
  * 生产者消费者队列的缓冲池，认为生产者产生的数据是无限的
  * 
  * @author liuyu
- * @date 2016年12月6日
  * @param <T>
  */
 public class BufferPool<T> {
