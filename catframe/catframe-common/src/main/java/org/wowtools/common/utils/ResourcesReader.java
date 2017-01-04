@@ -33,11 +33,11 @@ public class ResourcesReader {
 			}
 		}
 	}
-	
-	public static InputStream readInJarStream(Class<?> clazz, String path){
+
+	public static InputStream readInJarStream(Class<?> clazz, String path) {
 		try {
-			if(path.indexOf(0)!='/'){
-				path = "/"+path;
+			if (path.indexOf(0) != '/') {
+				path = "/" + path;
 			}
 			return clazz.getResourceAsStream(path);
 		} catch (Exception e) {
@@ -47,23 +47,33 @@ public class ResourcesReader {
 	}
 
 	/**
+	 * 获得根目录路径
+	 * @param clazz 使用的类
+	 * @return 根目录路径
+	 */
+	public static String getRootPath(Class<?> clazz) {
+		String basePath = clazz.getClassLoader().getResource("/") != null
+				? clazz.getClassLoader().getResource("/").getPath() : clazz.getResource("/").getPath();
+		return basePath;
+	}
+
+	/**
 	 * 读取项目中的资源
 	 * 
-	 * @param clazz
+	 * @param clazz 使用的类
 	 * @param path
 	 *            资源相对路径，如：res.txt
 	 * @return
 	 */
 	public static InputStream readInProjectStream(Class<?> clazz, String path) {
 		try {
-			String basePath = clazz.getClassLoader().getResource("/") != null
-					? clazz.getClassLoader().getResource("/").getPath() : clazz.getResource("/").getPath();
+			String basePath = getRootPath(clazz);
 			return new FileInputStream(basePath + path);
 		} catch (Exception e) {
 			throw new RuntimeException("读取配置文件异常", e);
-		} 
+		}
 	}
-	
+
 	/**
 	 * 读取项目中的资源
 	 * 
@@ -106,7 +116,7 @@ public class ResourcesReader {
 			return readInJarStr(clazz, path);
 		}
 	}
-	
+
 	/**
 	 * 优先读取项目中的资源，读不到再读取jar中的
 	 * 
