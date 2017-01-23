@@ -27,17 +27,13 @@ public class PcmTest {
 				return i.get() == 10;
 			}
 		};
-		Customer<Integer> customer = new Customer<Integer>() {
-
-			@Override
-			public void consume(Integer obj) {
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-				}
-				System.out.println("消费"+obj);
-			}
-		};
+		Customer<Integer> customer = obj -> {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+            }
+            System.out.println("消费"+obj);
+        };
 		PcmTaskLtp<Integer> task = new PcmTaskLtp<>(producer, customer, 5, 1000);
 		task.startTask(true);
 		System.out.println("end");
