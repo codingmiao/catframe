@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.wowtools</groupId>
 		<artifactId>catframe</artifactId>
-		<version>1.0</version>
+		<version>1.01</version>
 	</parent>
 	<artifactId>catframe-common</artifactId>
 	<description>自用框架-通用</description>
