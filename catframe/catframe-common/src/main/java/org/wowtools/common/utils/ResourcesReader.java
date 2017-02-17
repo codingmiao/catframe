@@ -17,7 +17,7 @@ public class ResourcesReader {
 
 
     /**
-     * 获得class所在根路径，若class被打成jar包，则返回jar所在根路径
+     * 获得class所在根路径，若class被打成jar包，则返回jar所在路径
      *
      * @param clazz 定位用的类
      * @return 根目录路径
@@ -88,22 +88,11 @@ public class ResourcesReader {
      * @return
      */
     public static String readStr(Class<?> clazz, String path) {
-        InputStream is = null;
         try {
-            is = readStream(clazz, path);
-            byte b[] = new byte[is.available()];
-            is.read(b);
-            String res = new String(b, "UTF-8");
-            return res;
+            String basePath = getRootPath(clazz);
+            return readStr(basePath + "/" + path);
         } catch (Exception e) {
             throw new RuntimeException("读取配置文件异常", e);
-        } finally {
-            if (null != is) {
-                try {
-                    is.close();
-                } catch (IOException e) {
-                }
-            }
         }
     }
 
@@ -117,9 +106,49 @@ public class ResourcesReader {
     public static InputStream readStream(Class<?> clazz, String path) {
         try {
             String basePath = getRootPath(clazz);
-            return new FileInputStream(basePath + "/" + path);
+            return readStream(basePath + "/" + path);
         } catch (Exception e) {
             throw new RuntimeException("读取配置文件异常", e);
+        }
+    }
+
+    /**
+     * 读取绝对路径下的文件的InputStream
+     *
+     * @param path 绝对路径
+     * @return
+     */
+    public static InputStream readStream(String path) {
+        try {
+            return new FileInputStream(path);
+        } catch (Exception e) {
+            throw new RuntimeException("读取配置文件异常", e);
+        }
+    }
+
+    /**
+     * 读取绝对路径下的文件的文件内容为String
+     *
+     * @param path 绝对路径
+     * @return
+     */
+    public static String readStr(String path) {
+        InputStream is = null;
+        try {
+            is = readStream(path);
+            byte b[] = new byte[is.available()];
+            is.read(b);
+            String res = new String(b, "UTF-8");
+            return res;
+        } catch (Exception e) {
+            throw new RuntimeException("读取配置文件异常", e);
+        } finally {
+            if (null != is) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                }
+            }
         }
     }
 

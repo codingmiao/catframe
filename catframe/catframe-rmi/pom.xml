@@ -1,10 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	<properties>
+		<catframe.version>1.03</catframe.version>
+	</properties>
 	<parent>
 		<groupId>org.wowtools</groupId>
 		<artifactId>catframe</artifactId>
-		<version>1.0</version>
+		<version>1.03</version>
 	</parent>
 	<artifactId>catframe-rmi</artifactId>
 	<description>基于rmi和zookeeper的远程调用框架</description>
