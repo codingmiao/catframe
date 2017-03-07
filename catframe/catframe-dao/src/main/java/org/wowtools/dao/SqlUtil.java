@@ -16,6 +16,27 @@ import java.util.Date;
  */
 public class SqlUtil {
     private static final Logger log = LoggerFactory.getLogger(SqlUtil.class);
+    private static boolean debugEnabled = log.isDebugEnabled();
+
+    private static class DebugModule {
+        DebugModule(String sql, Object... paramValue) {
+            this.startTime = System.currentTimeMillis();
+            this.sql = sql;
+            this.paramValue = paramValue;
+        }
+
+        long startTime;
+        String sql;
+        Object[] paramValue;
+
+        void debug() {
+            long endTime = System.currentTimeMillis();
+            StringBuilder sb = getLogSqlAndParams(sql, paramValue);
+            sb.append("\ncost millisecond:").append(endTime - startTime);
+            String msg = sb.toString();
+            log.debug(msg);
+        }
+    }
 
     /**
      * ResultSet遍历器
@@ -46,14 +67,23 @@ public class SqlUtil {
 
     }
 
-    private static String getLogSqlAndParams(String sql, Object[] paramValue) {
+    private static StringBuilder getLogSqlAndParams(String sql, Object[] paramValue) {
         StringBuilder sb = new StringBuilder();
-        sb.append("SqlUtil executeUpdate:\t").append(sql);
+        sb.append("SqlUtil execute,sql:\t").append(sql);
         sb.append("\nparams:");
         for (Object p : paramValue) {
-            sb.append(p == null ? "null" : sb.toString()).append("\t");
+            sb.append(p == null ? "null" : p.toString()).append("\t");
         }
-        return sb.toString();
+        return sb;
+    }
+
+    /**
+     * 设置调试信息是否开启，默认和sl4j的配置一样
+     *
+     * @param enable debugEnabled
+     */
+    public static void setDebugModuleStatus(boolean enable) {
+        debugEnabled = enable;
     }
 
     /**
@@ -64,10 +94,11 @@ public class SqlUtil {
      * @return the number of entities updated or deleted
      */
     public static int executeUpdateByNativeQuery(EntityManager em, String sql, Object[] paramValue) {
-        if (log.isDebugEnabled()) {
-            log.debug(getLogSqlAndParams(sql, paramValue));
+        DebugModule debugModule = null;
+        if (debugEnabled) {
+            debugModule = new DebugModule(sql, paramValue);
         }
-
+        int res;
         try {
             Query query = em.createNativeQuery(sql);
             int i = 1;
@@ -75,12 +106,15 @@ public class SqlUtil {
                 query.setParameter(i, p);
                 i++;
             }
-
-            return query.executeUpdate();
+            res = query.executeUpdate();
+            if (debugEnabled) {
+                debugModule.debug();
+            }
         } catch (Exception e) {
-            log.debug(getLogSqlAndParams(sql, paramValue));
-            throw new RuntimeException("执行异常,sql:" + sql, e);
+            String input = getLogSqlAndParams(sql, paramValue).toString();
+            throw new RuntimeException("执行异常,input:" + input, e);
         }
+        return res;
     }
 
     /**
@@ -102,10 +136,11 @@ public class SqlUtil {
      * @return the number of entities updated or deleted
      */
     public static int executeUpdate(Connection conn, String sql, boolean closeConn, Object... paramValue) {
-        if (log.isDebugEnabled()) {
-            log.debug(getLogSqlAndParams(sql, paramValue));
+        DebugModule debugModule = null;
+        if (debugEnabled) {
+            debugModule = new DebugModule(sql, paramValue);
         }
-
+        int res;
         PreparedStatement pstm = null;
         try {
             pstm = conn.prepareStatement(sql);
@@ -114,12 +149,12 @@ public class SqlUtil {
                 pstm.setObject(i, toDbObj(arg));
                 i++;
             }
-            return pstm.executeUpdate();
+            res = pstm.executeUpdate();
         } catch (Exception e) {
             String msg = e.getMessage();
             if (msg.indexOf("ORA-00939") < 0) {
-                log.debug(getLogSqlAndParams(sql, paramValue));
-                throw new RuntimeException("执行异常,msg:" + e.getMessage() + ",sql:" + sql, e);
+                throw new RuntimeException("执行异常,msg:" + e.getMessage() +
+                        ",input :" + getLogSqlAndParams(sql, paramValue).toString(), e);
             }
             return 1;
         } finally {
@@ -136,6 +171,10 @@ public class SqlUtil {
                 }
             }
         }
+        if (debugEnabled) {
+            debugModule.debug();
+        }
+        return res;
     }
 
     private static Object toDbObj(Object o) {
@@ -154,8 +193,12 @@ public class SqlUtil {
      * @return
      */
     public static int[] batchUpdate(Connection conn, String sql, Collection<Object[]> paramValues, boolean closeConn) {
-        log.debug("SqlUtil batchUpdate:\t{}\t params:{}", sql, paramValues.size());
+        DebugModule debugModule = null;
+        if (debugEnabled) {
+            debugModule = new DebugModule(sql, "size", paramValues.size());
+        }
         PreparedStatement pstm = null;
+        int[] res;
         try {
             conn.setAutoCommit(false);
             pstm = conn.prepareStatement(sql);
@@ -167,9 +210,8 @@ public class SqlUtil {
                 }
                 pstm.addBatch();
             }
-            int[] res = pstm.executeBatch();
+            res = pstm.executeBatch();
             conn.commit();
-            return res;
         } catch (Exception e) {
             throw new RuntimeException("batchUpdate异常,sql:" + sql, e);
         } finally {
@@ -190,6 +232,10 @@ public class SqlUtil {
                 }
             }
         }
+        if (debugEnabled) {
+            debugModule.debug();
+        }
+        return res;
     }
 
     /**
@@ -225,6 +271,14 @@ public class SqlUtil {
         return v.res;
     }
 
+    /**
+     * 查询，并通过结果集遍历器得到查询结果
+     *
+     * @param conn            数据库连接
+     * @param simpleRsVisitor FunctionalInterface的结果集遍历器
+     * @param sql             sql
+     * @param args            查询绑定的参数
+     */
     public static void queryWithJdbc(Connection conn, SimpleJdbcResultVisitor simpleRsVisitor, String sql,
                                      Object... args) {
         JdbcResultVisitor rsVisitor = new JdbcResultVisitor() {
@@ -236,7 +290,19 @@ public class SqlUtil {
         queryWithJdbc(conn, rsVisitor, sql, args);
     }
 
+    /**
+     * 查询，并通过结果集遍历器得到查询结果
+     *
+     * @param conn      数据库连接
+     * @param rsVisitor 结果集遍历器
+     * @param sql       sql
+     * @param args      查询绑定的参数
+     */
     public static void queryWithJdbc(Connection conn, JdbcResultVisitor rsVisitor, String sql, Object... args) {
+        DebugModule debugModule = null;
+        if (debugEnabled) {
+            debugModule = new DebugModule(sql, args);
+        }
 
         PreparedStatement pstm = null;
         ResultSet rs = null;
@@ -275,5 +341,9 @@ public class SqlUtil {
                 }
             }
         }
+        if (debugEnabled) {
+            debugModule.debug();
+        }
+
     }
 }

@@ -8,7 +8,7 @@
 	</parent>
 	<artifactId>catframe-dao</artifactId>
 	<description>自用框架-数据库操作</description>
-
+	<version>1.04</version>
 	<dependencies>
 		<dependency>
 			<groupId>org.wowtools</groupId>
