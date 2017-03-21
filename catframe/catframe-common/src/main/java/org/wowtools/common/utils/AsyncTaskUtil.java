@@ -86,4 +86,8 @@ public class AsyncTaskUtil {
 		}
 		super.finalize();
 	}
+
+	public static void shutdown(){
+		pool.shutdown();
+	}
 }

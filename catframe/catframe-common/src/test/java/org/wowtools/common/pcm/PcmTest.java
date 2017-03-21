@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.wowtools.common.pcm.ltp.LtpPcmTask;
 import org.wowtools.common.pcm.ltp.LtpProducer;
+import org.wowtools.common.utils.AsyncTaskUtil;
 
 public class PcmTest {
 
@@ -20,7 +21,7 @@ public class PcmTest {
         @Override
         public Integer produce() {
             try {
-                Thread.sleep(100+r.nextInt(100));
+                Thread.sleep(100 + r.nextInt(100));
             } catch (InterruptedException e) {
             }
             i++;
@@ -41,7 +42,7 @@ public class PcmTest {
         @Override
         public void consume(Integer obj) {
             try {
-                Thread.sleep(200+r.nextInt(100));
+                Thread.sleep(200 + r.nextInt(100));
             } catch (InterruptedException e) {
             }
             System.out.println(name + "消费" + obj);
@@ -72,6 +73,7 @@ public class PcmTest {
         LtpPcmTask<Integer> task = new LtpPcmTask<>(producers, customers, 5, 1000);
         task.startTask(true);
         System.out.println("end");
+        AsyncTaskUtil.shutdown();
     }
 
 }
