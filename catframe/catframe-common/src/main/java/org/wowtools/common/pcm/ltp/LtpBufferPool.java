@@ -11,15 +11,15 @@ import org.wowtools.common.pcm.BufferPool;
  * @date 2016年12月6日
  * @param <T>
  */
-public class BufferPoolLtp<T> extends BufferPool<T> {
+public class LtpBufferPool<T> extends BufferPool<T> {
 	private final long timeoutMilliSecones;
 	
-	public BufferPoolLtp(int capacity,long timeoutMilliSecones){
+	public LtpBufferPool(int capacity, long timeoutMilliSecones){
 		super(capacity);
 		this.timeoutMilliSecones = timeoutMilliSecones;
 	}
 	
-	public BufferPoolLtp(long timeoutMilliSecones){
+	public LtpBufferPool(long timeoutMilliSecones){
 		super();
 		this.timeoutMilliSecones = timeoutMilliSecones;
 	}

@@ -7,10 +7,10 @@ package org.wowtools.common.pcm.ltp;
  * @date 2016年12月6日
  * @param <T>
  */
-public interface ProducerLtp<T> {
+public interface LtpProducer<T> {
 
 	/**
-	 * 生产一条数据，若返回null，则表示生产已完成
+	 * 生产一条数据，若不需要再生产数据，则返回null
 	 * 
 	 * @return
 	 */
