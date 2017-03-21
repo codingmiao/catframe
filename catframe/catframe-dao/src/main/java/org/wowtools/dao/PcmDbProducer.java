@@ -64,6 +64,6 @@ public abstract class PcmDbProducer<T> implements LtpProducer<T> {
 
     @Override
     public boolean isFinish() {
-        return hasNext;
+        return !hasNext;
     }
 }
