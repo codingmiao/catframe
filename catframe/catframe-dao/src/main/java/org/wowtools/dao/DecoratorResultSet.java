@@ -15,7 +15,7 @@ import java.util.Map;
  * @date 2017/3/20
  */
 public class DecoratorResultSet implements ResultSet {
-    private final ResultSet rs;
+    protected final ResultSet rs;
 
     /**
      * @param rs 实际执行方法的rs

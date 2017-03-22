@@ -1,5 +1,7 @@
 package org.wowtools.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wowtools.common.pcm.ltp.LtpProducer;
 
 import java.sql.Connection;
@@ -15,7 +17,7 @@ import java.sql.SQLException;
 public abstract class PcmDbProducer<T> implements LtpProducer<T> {
     private final ResultSet rs;
     private boolean hasNext;
-
+    private static final Logger log = LoggerFactory.getLogger(PcmDbProducer.class);
     /**
      * @param rs ResultSet
      */
@@ -24,7 +26,16 @@ public abstract class PcmDbProducer<T> implements LtpProducer<T> {
         try {
             hasNext = rs.next();
         } catch (SQLException e) {
+            close();
             throw new RuntimeException(e);
+        }
+    }
+
+    private void close(){
+        try {
+            rs.close();
+        } catch (SQLException e) {
+            log.warn("rs.close() error!!!!!!!!!!!!!!!11",e);
         }
     }
 
@@ -46,6 +57,7 @@ public abstract class PcmDbProducer<T> implements LtpProducer<T> {
                 hasNext = rs.next();
                 return obj;
             } catch (SQLException e) {
+                close();
                 throw new RuntimeException(e);
             }
         } else {
@@ -64,6 +76,11 @@ public abstract class PcmDbProducer<T> implements LtpProducer<T> {
 
     @Override
     public boolean isFinish() {
-        return !hasNext;
+        if (hasNext){
+            return false;
+        }else {
+            close();
+            return true;
+        }
     }
 }

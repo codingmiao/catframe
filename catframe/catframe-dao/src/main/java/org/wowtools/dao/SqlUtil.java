@@ -281,8 +281,8 @@ public class SqlUtil {
             ResultSet rs = pstm.executeQuery();
             DecoratorResultSet drs = new DecoratorResultSet(rs) {
                 @Override
-                public void close() throws SQLException {
-                    super.close();
+                public void close() {
+                    closeResultSet(this.rs);
                     closePreparedStatement(pstm);
                     closeConnection(conn);
                 }
