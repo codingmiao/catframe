@@ -56,7 +56,7 @@ public abstract class PcmDbProducer<T> implements LtpProducer<T> {
                 T obj = rs2Obj(rs);
                 hasNext = rs.next();
                 return obj;
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 close();
                 throw new RuntimeException(e);
             }
