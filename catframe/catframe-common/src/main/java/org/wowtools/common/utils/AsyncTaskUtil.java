@@ -2,10 +2,7 @@ package org.wowtools.common.utils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 /**
  * 异步任务执行工具类
@@ -56,28 +53,29 @@ public class AsyncTaskUtil {
      * @param wait  是否等待所有任务执行完毕
      */
     public static void executeAsynTasks(List<Runnable> tasks, boolean wait) {
-        if (!wait) {
+        if (wait) {
+            int n = tasks.size();
+            Semaphore semaphore = new Semaphore(0);
+            for (Runnable task : tasks) {
+                pool.execute(() -> {
+                    task.run();
+                    semaphore.release();
+                });
+            }
+            try {
+                semaphore.acquire(n);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
             for (Runnable task : tasks) {
                 pool.execute(task);
             }
-            return;
-        }
-        ArrayList<Future<?>> fs = new ArrayList<>();
-        for (Runnable task : tasks) {
-            Future<?> f = pool.submit(task);
-            fs.add(f);
-        }
-        try {
-            for (Future<?> f : fs) {
-                f.get();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
     /**
-     * 获取线程池
+     * 获取线程池(CachedThreadPool)
      *
      * @return
      */
