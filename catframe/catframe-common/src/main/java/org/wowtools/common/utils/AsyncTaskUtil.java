@@ -26,15 +26,18 @@ public class AsyncTaskUtil {
      * 批量执行任务，并收集任务返回的数据，待所有任务执行完后一并返回
      *
      * @param tasks
-     * @return
+     * @return 结果list，list中的数据顺序与tasks对应
      */
-    public static <T> List<T> executeAsynTasksAndReturn(List<Callable<T>> tasks) {
-        ArrayList<Future<T>> fs = new ArrayList<>();
+    public static <T> List<T> executeAsyncTasksAndReturn(List<Callable<T>> tasks) {
+        int n = tasks.size();
+        int i = 0;
+        Future<T>[] fs = new Future[n];
         for (Callable<T> task : tasks) {
             Future<T> f = pool.submit(task);
-            fs.add(f);
+            fs[i] = f;
+            i++;
         }
-        ArrayList<T> res = new ArrayList<>();
+        ArrayList<T> res = new ArrayList<T>(n);
         try {
             for (Future<T> f : fs) {
                 T r = f.get();
@@ -52,7 +55,7 @@ public class AsyncTaskUtil {
      * @param tasks
      * @param wait  是否等待所有任务执行完毕
      */
-    public static void executeAsynTasks(List<Runnable> tasks, boolean wait) {
+    public static void executeAsyncTasks(List<Runnable> tasks, boolean wait) {
         if (wait) {
             int n = tasks.size();
             Semaphore semaphore = new Semaphore(0);
