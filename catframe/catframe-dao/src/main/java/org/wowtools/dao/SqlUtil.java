@@ -8,6 +8,7 @@ import javax.persistence.Query;
 import java.sql.*;
 import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedList;
 
 /**
  * 直接用sql操作数据的工具类
@@ -44,6 +45,14 @@ public class SqlUtil {
 
         void visit(ResultSet rs) throws SQLException;
 
+    }
+
+    /**
+     * ResultSet收集器，在ResultSet的遍历过程中，将结果集转为list
+     */
+    @FunctionalInterface
+    public interface JdbcResultCollector<T> {
+        T collect(ResultSet rs) throws SQLException;
     }
 
     private static String getLogSqlAndParams(String sql, Object[] paramValue) {
@@ -84,8 +93,9 @@ public class SqlUtil {
     }
 
     /**
-     * 执行sql CUD命令
+     * 执行sql CUD命令，且关闭连接
      *
+     * @param conn       数据库连接
      * @param sql        sql
      * @param paramValue 参数值
      * @return the number of entities updated or deleted
@@ -97,6 +107,7 @@ public class SqlUtil {
     /**
      * 执行sql CUD命令
      *
+     * @param conn       数据库连接
      * @param sql        sql
      * @param paramValue 参数值
      * @return the number of entities updated or deleted
@@ -124,7 +135,10 @@ public class SqlUtil {
             return 1;
         } finally {
             closePreparedStatement(pstm);
-            closeConnection(conn);
+            if (closeConn) {
+                closeConnection(conn);
+            }
+
         }
     }
 
@@ -139,17 +153,19 @@ public class SqlUtil {
     /**
      * 批量执行CUD命令
      *
-     * @param sql
-     * @param paramValues
-     * @return an array of update counts containing one element for each
-     * command in the batch.  The elements of the array are ordered according
-     * to the order in which commands were added to the batch.
+     * @param conn             数据库连接
+     * @param sql              sql
+     * @param paramValues      绑定参数，每个Object[]的长度需与sql中动态绑定参数数量一致
+     * @param notRecyclingConn 不回收使用数据库连接，若为false，则不改变连接的AutoCommit状态,不提交数据，并在方法结束时不关闭连接；若为true则反之
+     * @return
      */
-    public static int[] batchUpdate(Connection conn, String sql, Collection<Object[]> paramValues, boolean closeConn) {
+    public static int[] batchUpdate(Connection conn, String sql, Collection<Object[]> paramValues, boolean notRecyclingConn) {
         log.debug("SqlUtil batchUpdate:\t{}\t params:{}", sql, paramValues.size());
         PreparedStatement pstm = null;
         try {
-            conn.setAutoCommit(false);
+            if (notRecyclingConn) {
+                conn.setAutoCommit(false);
+            }
             pstm = conn.prepareStatement(sql);
             for (Object[] args : paramValues) {
                 int i = 1;
@@ -160,18 +176,18 @@ public class SqlUtil {
                 pstm.addBatch();
             }
             int[] res = pstm.executeBatch();
-            conn.commit();
+            if (notRecyclingConn) {
+                conn.commit();
+            }
             return res;
         } catch (Exception e) {
             throw new RuntimeException("batchUpdate异常,sql:" + sql, e);
         } finally {
             closePreparedStatement(pstm);
-            try {
-                conn.setAutoCommit(true);
-            } catch (SQLException e1) {
-                log.warn("conn.setAutoCommit(true)异常", e1);
+            if (notRecyclingConn) {
+                closeConnection(conn);
             }
-            closeConnection(conn);
+
         }
     }
 
@@ -209,6 +225,30 @@ public class SqlUtil {
         Visitor v = new Visitor();
         queryWithJdbc(conn, v, sql, args);
         return v.res;
+    }
+
+    /**
+     * 查询，并将结果收集到collection中
+     *
+     * @param conn       conn
+     * @param collector  结果收集器，用于将一行数据转为一个对象T
+     * @param collection 结果容器，作为返回值，若为空，则新建一个linkedlist并返回
+     * @param sql        sql
+     * @param args       绑定参数
+     * @param <T>        返回容器中对象泛型
+     * @return
+     */
+    public static <T> Collection<T> queryAndCollect(Connection conn,
+                                                    JdbcResultCollector<T> collector, Collection<T> collection,
+                                                    String sql, Object... args) {
+        Collection<T> res;
+        if (null == collection) {
+            res = new LinkedList<>();
+        } else {
+            res = collection;
+        }
+        queryWithJdbc(conn, (rs) -> res.add(collector.collect(rs)), sql, args);
+        return res;
     }
 
     /**
