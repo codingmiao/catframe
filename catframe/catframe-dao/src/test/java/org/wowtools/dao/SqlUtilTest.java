@@ -15,10 +15,6 @@ public class SqlUtilTest {
     private static JdbcConnectionPool connectionPool = JdbcConnectionPool.create("jdbc:h2:mem:test;MVCC=TRUE",
             "sa", "sa");
 
-    static {
-        SqlUtil.executeUpdate(getConn(), "CREATE TABLE TEST1(ID VARCHAR(255))");
-    }
-
     private static Connection getConn() {
         try {
             return connectionPool.getConnection();
@@ -28,6 +24,7 @@ public class SqlUtilTest {
     }
 
     public static void main(String[] args) {
+        SqlUtil.executeUpdate(getConn(), "CREATE TABLE TEST1(ID VARCHAR(200))");
         Collection<Object[]> params = new ArrayList<>(2);
         params.add(new Object[]{"test1.1"});
         params.add(new Object[]{"test1.2"});

@@ -15,11 +15,6 @@ public class TransactionalSqlUtilTest {
     private static JdbcConnectionPool connectionPool = JdbcConnectionPool.create("jdbc:h2:mem:test;MVCC=TRUE",
             "sa", "sa");
 
-    static {
-        SqlUtil.executeUpdate(getConn(), "CREATE TABLE TEST1(ID VARCHAR(255))");
-        SqlUtil.executeUpdate(getConn(), "CREATE TABLE TEST2(ID VARCHAR(255))");
-    }
-
     private static Connection getConn() {
         try {
             return connectionPool.getConnection();
@@ -29,6 +24,8 @@ public class TransactionalSqlUtilTest {
     }
 
     public static void main(String[] args) throws SQLException {
+        SqlUtil.executeUpdate(getConn(), "CREATE TABLE TEST1(ID VARCHAR(255))");
+        SqlUtil.executeUpdate(getConn(), "CREATE TABLE TEST2(ID VARCHAR(255))");
         testCommit();
         testRollBack();
         testRollBackSavePoint();
