@@ -1,13 +1,14 @@
 package org.wowtools.dao;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.HashMap;
-
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.json.JSONObject;
 import org.wowtools.common.utils.ResourcesReader;
 
-import com.mchange.v2.c3p0.ComboPooledDataSource;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.HashMap;
 
 /**
  * 数据库连接池，传入一个类似如下的json，构建一个连接池
@@ -20,9 +21,10 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
  * 		"driverClass":"com.mysql.jdbc.Driver",//驱动
  * 		"minPoolSize":0,//最小连接数
  * 		"maxPoolSize":1,//最大连接数
- * 		"initialPoolSize":1,//可选，初始连接数
- * 		"maxStatements":1,//可选，最大maxIdleTime
- * 		"maxIdleTime":1,//可选，maxIdleTime
+ * 	    "connectionTimeout":200000,//可选，连接超时
+ * 	    "prepStmtCacheSize":256,//可选，prepStmtCacheSize
+ * 	    "prepStmtCacheSqlLimit":1024,//可选，prepStmtCacheSqlLimit
+ * 	    "cachePrepStmts":"true",//可选，开启cachePrepStmts
  *    }
  * </pre>
  *
@@ -33,7 +35,7 @@ public class ConnectionPool {
 
     private static final HashMap<String, ConnectionPool> instances = new HashMap<String, ConnectionPool>(1);
 
-    private final ComboPooledDataSource dataSource;
+    private final DataSource dataSource;
 
     private final String dataSourceName;
 
@@ -43,7 +45,7 @@ public class ConnectionPool {
      * @param cfgPath 配置文件绝对路径
      * @return ConnectionPool
      */
-    public synchronized static ConnectionPool getOrInitInstance(String cfgPath) {
+    public static ConnectionPool getOrInitInstance(String cfgPath) {
         String cfg = ResourcesReader.readStr(cfgPath);
         JSONObject jsonCfg = new JSONObject(cfg);
         return getOrInitInstance(jsonCfg);
@@ -56,7 +58,7 @@ public class ConnectionPool {
      * @param cfgPath 配置文件相对路径
      * @return
      */
-    public synchronized static ConnectionPool getOrInitInstance(Class<?> clazz, String cfgPath) {
+    public static ConnectionPool getOrInitInstance(Class<?> clazz, String cfgPath) {
         String cfg = ResourcesReader.readStr(clazz, cfgPath);
         JSONObject jsonCfg = new JSONObject(cfg);
         return getOrInitInstance(jsonCfg);
@@ -70,11 +72,12 @@ public class ConnectionPool {
      */
     public synchronized static ConnectionPool getOrInitInstance(JSONObject jsonCfg) {
         String dataSourceName = jsonCfg.getString("dataSourceName");
-        ConnectionPool old = instances.get(dataSourceName);
-        if (null != old) {
-            return old;
+        ConnectionPool pool = instances.get(dataSourceName);
+        if (null == pool) {
+            pool = new ConnectionPool(jsonCfg, dataSourceName);
+            instances.put(dataSourceName, pool);
         }
-        return new ConnectionPool(jsonCfg, dataSourceName);
+        return pool;
     }
 
     /**
@@ -82,33 +85,42 @@ public class ConnectionPool {
      */
     private ConnectionPool(JSONObject jsonCfg, String dataSourceName) {
         try {
-            dataSource = new ComboPooledDataSource();
-            dataSource.setDataSourceName(dataSourceName);
-            dataSource.setUser(jsonCfg.getString("user"));
-            dataSource.setPassword(jsonCfg.getString("password"));
-            dataSource.setJdbcUrl(jsonCfg.getString("jdbcUrl"));
-            dataSource.setDriverClass(jsonCfg.getString("driverClass"));
-            dataSource.setMinPoolSize(jsonCfg.getInt("minPoolSize"));
-            dataSource.setMaxPoolSize(jsonCfg.getInt("maxPoolSize"));
+            HikariConfig config = new HikariConfig();
+            config.setUsername(jsonCfg.getString("user"));
+            config.setPassword(jsonCfg.getString("password"));
+            config.setJdbcUrl(jsonCfg.getString("jdbcUrl"));
+            config.setDriverClassName(jsonCfg.getString("driverClass"));
+            config.setMinimumIdle(jsonCfg.getInt("minPoolSize"));
+            config.setMaximumPoolSize(jsonCfg.getInt("maxPoolSize"));
 
             try {
-                dataSource.setInitialPoolSize(jsonCfg.getInt("initialPoolSize"));
+                config.addDataSourceProperty("cachePrepStmts", jsonCfg.get("cachePrepStmts"));
             } catch (Exception e) {
             }
             try {
-                dataSource.setMaxStatements(jsonCfg.getInt("maxStatements"));
+                config.addDataSourceProperty("prepStmtCacheSize", jsonCfg.get("prepStmtCacheSize"));
             } catch (Exception e) {
             }
             try {
-                dataSource.setMaxIdleTime(jsonCfg.getInt("maxIdleTime"));
+                config.addDataSourceProperty("prepStmtCacheSqlLimit", jsonCfg.get("prepStmtCacheSqlLimit"));
+            } catch (Exception e) {
+            }
+            try {
+                config.setConnectionTimeout(jsonCfg.getLong("connectionTimeout"));
             } catch (Exception e) {
             }
             this.dataSourceName = dataSourceName;
+            dataSource = new HikariDataSource(config);
         } catch (Exception e) {
             throw new DaoRuntimeException("初始化JdbcUtil异常", e);
         }
     }
 
+    /**
+     * 获得一个数据库连接
+     *
+     * @return
+     */
     public Connection getConnection() {
         try {
             return dataSource.getConnection();
@@ -127,20 +139,15 @@ public class ConnectionPool {
     }
 
     /**
-     * 获取DataSource
-     *
-     * @return
-     */
-    public ComboPooledDataSource getDataSource() {
-        return dataSource;
-    }
-
-    /**
      * 获得连接池名称
      *
      * @return
      */
     public String getName() {
         return dataSourceName;
+    }
+
+    public DataSource getDataSource() {
+        return dataSource;
     }
 }
