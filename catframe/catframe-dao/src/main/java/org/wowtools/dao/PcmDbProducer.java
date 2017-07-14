@@ -35,7 +35,7 @@ public abstract class PcmDbProducer<T> implements LtpProducer<T> {
         try {
             rs.close();
         } catch (SQLException e) {
-            log.warn("rs.close() error!!!!!!!!!!!!!!!11",e);
+            log.warn("rs.close() error",e);
         }
     }
 

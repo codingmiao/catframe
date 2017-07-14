@@ -55,12 +55,12 @@ public class SqlUtil {
         T collect(ResultSet rs) throws SQLException;
     }
 
-    private static String getLogSqlAndParams(String sql, Object[] paramValue) {
+    public static String getLogSqlAndParams(String sql, Object[] paramValue) {
         StringBuilder sb = new StringBuilder();
-        sb.append("SqlUtil executeUpdate:\t").append(sql);
+        sb.append(sql);
         sb.append("\nparams:");
         for (Object p : paramValue) {
-            sb.append(p == null ? "null" : sb.toString()).append("\t");
+            sb.append(p == null ? "null" : p.toString()).append(",\t");
         }
         return sb.toString();
     }
@@ -74,7 +74,7 @@ public class SqlUtil {
      */
     public static int executeUpdateByNativeQuery(EntityManager em, String sql, Object[] paramValue) {
         if (log.isDebugEnabled()) {
-            log.debug(getLogSqlAndParams(sql, paramValue));
+            log.debug("executeUpdate:{}", getLogSqlAndParams(sql, paramValue));
         }
 
         try {
@@ -87,8 +87,7 @@ public class SqlUtil {
 
             return query.executeUpdate();
         } catch (Exception e) {
-            log.debug(getLogSqlAndParams(sql, paramValue));
-            throw new RuntimeException("执行异常,sql:" + sql, e);
+            throw new SqlException(e, sql, paramValue);
         }
     }
 
@@ -114,7 +113,7 @@ public class SqlUtil {
      */
     public static int executeUpdate(Connection conn, String sql, boolean closeConn, Object... paramValue) {
         if (log.isDebugEnabled()) {
-            log.debug(getLogSqlAndParams(sql, paramValue));
+            log.debug("executeUpdate:{}", getLogSqlAndParams(sql, paramValue));
         }
 
         PreparedStatement pstm = null;
@@ -129,8 +128,7 @@ public class SqlUtil {
         } catch (Exception e) {
             String msg = e.getMessage();
             if (msg.indexOf("ORA-00939") < 0) {
-                log.debug(getLogSqlAndParams(sql, paramValue));
-                throw new RuntimeException("执行异常,msg:" + e.getMessage() + ",sql:" + sql, e);
+                throw new SqlException(e, sql, paramValue);
             }
             return 1;
         } finally {
@@ -213,7 +211,7 @@ public class SqlUtil {
                     sb.append("查询结果不唯一:\t").append(sql);
                     sb.append("\nparams:");
                     for (Object p : args) {
-                        sb.append(p == null ? "null" : sb.toString()).append("\t");
+                        sb.append(p == null ? "null" : p.toString()).append("\t");
                     }
                     throw new RuntimeException(sb.toString());
                 }
@@ -295,7 +293,7 @@ public class SqlUtil {
             }
             rsVisitor.afterLoop(rs);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new SqlException(e, sql, args);
         } finally {
             closeResultSet(rs);
             closePreparedStatement(pstm);
@@ -329,7 +327,7 @@ public class SqlUtil {
             };
             return drs;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new SqlException(e, sql, args);
         }
     }
 

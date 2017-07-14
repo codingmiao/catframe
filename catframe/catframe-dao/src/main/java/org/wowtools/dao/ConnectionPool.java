@@ -86,12 +86,30 @@ public class ConnectionPool {
     private ConnectionPool(JSONObject jsonCfg, String dataSourceName) {
         try {
             HikariConfig config = new HikariConfig();
-            config.setUsername(jsonCfg.getString("user"));
-            config.setPassword(jsonCfg.getString("password"));
-            config.setJdbcUrl(jsonCfg.getString("jdbcUrl"));
-            config.setDriverClassName(jsonCfg.getString("driverClass"));
-            config.setMinimumIdle(jsonCfg.getInt("minPoolSize"));
-            config.setMaximumPoolSize(jsonCfg.getInt("maxPoolSize"));
+            try {
+            } catch (Exception e) {
+                config.setUsername(jsonCfg.getString("user"));
+            }
+            try {
+            } catch (Exception e) {
+                config.setPassword(jsonCfg.getString("password"));
+            }
+            try {
+                config.setJdbcUrl(jsonCfg.getString("jdbcUrl"));
+            } catch (Exception e) {
+            }
+            try {
+                config.setDriverClassName(jsonCfg.getString("driverClass"));
+            } catch (Exception e) {
+            }
+            try {
+                config.setMinimumIdle(jsonCfg.getInt("minPoolSize"));
+            } catch (Exception e) {
+            }
+            try {
+                config.setMaximumPoolSize(jsonCfg.getInt("maxPoolSize"));
+            } catch (Exception e) {
+            }
 
             try {
                 config.addDataSourceProperty("cachePrepStmts", jsonCfg.get("cachePrepStmts"));
