@@ -171,7 +171,7 @@ public class LtpPcmTask<T> {
         }
         for (LtpProducer<T> producer : producers) {
             if (!producer.isFinish()) {
-                break;
+                return false;
             }
         }
         allFinish.set(true);
