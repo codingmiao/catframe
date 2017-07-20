@@ -87,12 +87,12 @@ public class ConnectionPool {
         try {
             HikariConfig config = new HikariConfig();
             try {
-            } catch (Exception e) {
                 config.setUsername(jsonCfg.getString("user"));
+            } catch (Exception e) {
             }
             try {
-            } catch (Exception e) {
                 config.setPassword(jsonCfg.getString("password"));
+            } catch (Exception e) {
             }
             try {
                 config.setJdbcUrl(jsonCfg.getString("jdbcUrl"));
@@ -130,7 +130,7 @@ public class ConnectionPool {
             this.dataSourceName = dataSourceName;
             dataSource = new HikariDataSource(config);
         } catch (Exception e) {
-            throw new DaoRuntimeException("初始化JdbcUtil异常", e);
+            throw new DaoRuntimeException("初始化ConnectionPool异常", e);
         }
     }
 
