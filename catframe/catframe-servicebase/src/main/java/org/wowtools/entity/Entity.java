@@ -1,5 +1,5 @@
 package org.wowtools.entity;
 
-public interface Entity {
-
+public interface Entity<T> {
+    T getId();
 }

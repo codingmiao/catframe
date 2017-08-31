@@ -26,11 +26,6 @@ public class CopyPropertiesUtil<A, B> {
 	private final Field[] adaptableFieldsB;
 
 	public CopyPropertiesUtil(Class<? extends A> classA, Class<? extends B> classB) {
-		// ParameterizedType pt = (ParameterizedType)
-		// this.getClass().getGenericSuperclass();
-		// Type[] types = pt.getActualTypeArguments();
-		// classA = (Class<?>) types[0];
-		// classB = (Class<?>) types[1];
 		this.classA = classA;
 		this.classB = classB;
 		List<Field> fieeldsA = getAdaptableFields(classA);
