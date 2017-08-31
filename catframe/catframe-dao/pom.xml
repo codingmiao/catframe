@@ -4,16 +4,16 @@
     <parent>
         <groupId>org.wowtools</groupId>
         <artifactId>catframe</artifactId>
-        <version>1.2STABLE</version>
+        <version>cell</version>
     </parent>
     <artifactId>catframe-dao</artifactId>
-    <description>自用框架-数据库操作</description>
-    <version>1.2.2</version>
+    <description>catframe-数据库操作</description>
+    <version>1.4STABLE</version>
     <dependencies>
         <dependency>
             <groupId>org.wowtools</groupId>
             <artifactId>catframe-common</artifactId>
-            <version>1.2STABLE</version>
+            <version>1.4STABLE</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

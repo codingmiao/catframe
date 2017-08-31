@@ -4,11 +4,11 @@
     <parent>
         <groupId>org.wowtools</groupId>
         <artifactId>catframe</artifactId>
-        <version>1.2STABLE</version>
+        <version>cell</version>
     </parent>
     <artifactId>catframe-common</artifactId>
-    <description>自用框架-通用</description>
-    <version>1.2STABLE</version>
+    <description>catframe-通用</description>
+    <version>1.4STABLE</version>
     <dependencies>
         <dependency>
             <groupId>com.googlecode.concurrentlinkedhashmap</groupId>

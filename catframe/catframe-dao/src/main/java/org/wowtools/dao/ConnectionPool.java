@@ -3,6 +3,8 @@ package org.wowtools.dao;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wowtools.common.utils.ResourcesReader;
 
 import javax.sql.DataSource;
@@ -32,7 +34,7 @@ import java.util.HashMap;
  * @date 2016年8月8日
  */
 public class ConnectionPool {
-
+    private static final Logger log = LoggerFactory.getLogger(ConnectionPool.class);
     private static final HashMap<String, ConnectionPool> instances = new HashMap<String, ConnectionPool>(1);
 
     private final DataSource dataSource;
@@ -87,20 +89,24 @@ public class ConnectionPool {
         try {
             HikariConfig config = new HikariConfig();
             try {
-                config.setUsername(jsonCfg.getString("user"));
-            } catch (Exception e) {
-            }
-            try {
-                config.setPassword(jsonCfg.getString("password"));
-            } catch (Exception e) {
-            }
-            try {
                 config.setJdbcUrl(jsonCfg.getString("jdbcUrl"));
             } catch (Exception e) {
+                throw new RuntimeException("未设置jdbcUrl参数");
             }
             try {
                 config.setDriverClassName(jsonCfg.getString("driverClass"));
             } catch (Exception e) {
+                throw new RuntimeException("未设置driverClass参数");
+            }
+            try {
+                config.setUsername(jsonCfg.getString("user"));
+            } catch (Exception e) {
+                log.warn("未设置user参数");
+            }
+            try {
+                config.setPassword(jsonCfg.getString("password"));
+            } catch (Exception e) {
+                log.warn("未设置password参数");
             }
             try {
                 config.setMinimumIdle(jsonCfg.getInt("minPoolSize"));

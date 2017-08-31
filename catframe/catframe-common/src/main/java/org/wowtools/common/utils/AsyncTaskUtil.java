@@ -28,7 +28,18 @@ public class AsyncTaskUtil {
      * @param tasks
      * @return 结果list，list中的数据顺序与tasks对应
      */
-    public static <T> List<T> executeAsyncTasksAndReturn(List<Callable<T>> tasks) {
+    public static <T> ArrayList<T> executeAsyncTasksAndReturn(List<Callable<T>> tasks) {
+        return executeAsyncTasksAndReturn(tasks, pool);
+    }
+
+    /**
+     * 批量执行任务，并收集任务返回的数据，待所有任务执行完后一并返回
+     *
+     * @param tasks
+     * @param pool  执行任务的线程池，方法执行完后，线程池不会自动关闭
+     * @return 结果list，list中的数据顺序与tasks对应
+     */
+    public static <T> ArrayList<T> executeAsyncTasksAndReturn(List<Callable<T>> tasks, ExecutorService pool) {
         int n = tasks.size();
         int i = 0;
         Future<T>[] fs = new Future[n];
@@ -56,6 +67,17 @@ public class AsyncTaskUtil {
      * @param wait  是否等待所有任务执行完毕
      */
     public static void executeAsyncTasks(List<Runnable> tasks, boolean wait) {
+        executeAsyncTasks(tasks, wait, pool);
+    }
+
+    /**
+     * 批量执行任务
+     *
+     * @param tasks
+     * @param wait  是否等待所有任务执行完毕
+     * @param pool  执行任务的线程池，方法执行完后，线程池不会自动关闭
+     */
+    public static void executeAsyncTasks(List<Runnable> tasks, boolean wait, ExecutorService pool) {
         if (wait) {
             int n = tasks.size();
             Semaphore semaphore = new Semaphore(0);
