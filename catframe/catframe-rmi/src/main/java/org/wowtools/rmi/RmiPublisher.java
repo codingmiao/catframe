@@ -9,7 +9,7 @@ import org.apache.zookeeper.CreateMode;
 
 /**
  * 发布服务端service
- * 
+ *
  * @author liuyu
  * @date 2016年12月1日
  */
@@ -46,7 +46,7 @@ public class RmiPublisher {
 
 	/**
 	 * 发布一个service
-	 * 
+	 *
 	 * @param name
 	 *            服务名
 	 * @param servie

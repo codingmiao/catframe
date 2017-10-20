@@ -179,7 +179,7 @@ public class SqlUtil {
             }
             return res;
         } catch (Exception e) {
-            throw new RuntimeException("batchUpdate异常,sql:" + sql, e);
+            throw new SqlException("batchUpdate异常", e, sql);
         } finally {
             closePreparedStatement(pstm);
             if (notRecyclingConn) {
@@ -213,7 +213,7 @@ public class SqlUtil {
                     for (Object p : args) {
                         sb.append(p == null ? "null" : p.toString()).append("\t");
                     }
-                    throw new RuntimeException(sb.toString());
+                    throw new SqlException(sb.toString());
                 }
                 res = (T) rs.getObject(1);
                 n++;
