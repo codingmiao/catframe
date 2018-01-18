@@ -1,21 +1,25 @@
 package org.wowtools.dao;
 
 import org.h2.jdbcx.JdbcConnectionPool;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author liuyu
  * @date 2017/5/16
  */
 public class TransactionalSqlUtilTest {
-    private static JdbcConnectionPool connectionPool = JdbcConnectionPool.create("jdbc:h2:mem:test;MVCC=TRUE",
+    private JdbcConnectionPool connectionPool = JdbcConnectionPool.create("jdbc:h2:mem:test;MVCC=TRUE",
             "sa", "sa");
 
-    private static Connection getConn() {
+    private Connection getConn() {
         try {
             return connectionPool.getConnection();
         } catch (SQLException e) {
@@ -23,16 +27,14 @@ public class TransactionalSqlUtilTest {
         }
     }
 
-    public static void main(String[] args) throws SQLException {
+    @Before
+    public void init() {
         SqlUtil.executeUpdate(getConn(), "CREATE TABLE TEST1(ID VARCHAR(255))");
         SqlUtil.executeUpdate(getConn(), "CREATE TABLE TEST2(ID VARCHAR(255))");
-        testCommit();
-        testRollBack();
-        testRollBackSavePoint();
     }
 
-    private static void testCommit() {
-        System.out.println("TransactionalSqlUtilTest.testCommit:");
+    @Test
+    public void testCommit() {
         TransactionalSqlUtil tu = new TransactionalSqlUtil(getConn());
 
         tu.executeUpdate("insert into test1 values(?)", "test1.1");
@@ -44,14 +46,14 @@ public class TransactionalSqlUtilTest {
 
         long n1 = SqlUtil.queryBaseObjectWithJdbc(getConn(),
                 "select count(*) from test1 where id = ?", "test1.1");
-        System.out.println(n1);
+        assertEquals(1, n1);
         long n2 = SqlUtil.queryBaseObjectWithJdbc(getConn(),
                 "select count(*) from test2 where id in(?,?)", "test1.1", "test1.2");
-        System.out.println(n2);
+        assertEquals(2, n2);
     }
 
-    private static void testRollBack() {
-        System.out.println("TransactionalSqlUtilTest.testRollBack:");
+    @Test
+    public void testRollBack() {
         TransactionalSqlUtil tu = new TransactionalSqlUtil(getConn());
 
         try {
@@ -60,23 +62,20 @@ public class TransactionalSqlUtilTest {
             params.add(new Object[]{"test2.1"});
             params.add(new Object[]{"test2.2"});
             tu.batchUpdate("insert into test2 values(?)", params);
-            System.out.println(1/0);
-            tu.commit();
+            throw new RuntimeException();
         } catch (Exception e) {
-            System.out.println("捕获到异常"+e.getMessage());
             tu.rollback();
         }
 
         long n1 = SqlUtil.queryBaseObjectWithJdbc(getConn(),
                 "select count(*) from test1 where id = ?", "test2.1");
-        System.out.println(n1);
+        assertEquals(0, n1);
         long n2 = SqlUtil.queryBaseObjectWithJdbc(getConn(),
                 "select count(*) from test2 where id in(?,?)", "test2.1", "test2.2");
-        System.out.println(n2);
+        assertEquals(0, n2);
     }
-
-    private static void testRollBackSavePoint() {
-        System.out.println("TransactionalSqlUtilTest.testRollBackSavePoint:");
+    @Test
+    public void testRollBackSavePoint() {
         TransactionalSqlUtil tu = new TransactionalSqlUtil(getConn());
 
         try {
@@ -86,19 +85,17 @@ public class TransactionalSqlUtilTest {
             params.add(new Object[]{"test3.1"});
             params.add(new Object[]{"test3.2"});
             tu.batchUpdate("insert into test2 values(?)", params);
-            System.out.println(1/0);
-            tu.commit();
+            throw new RuntimeException();
         } catch (Exception e) {
-            System.out.println("捕获到异常"+e.getMessage());
             tu.rollbackToLastSavePoint();
             tu.commit();
         }
 
         long n1 = SqlUtil.queryBaseObjectWithJdbc(getConn(),
                 "select count(*) from test1 where id = ?", "test3.1");
-        System.out.println(n1);
+        assertEquals(1,n1);
         long n2 = SqlUtil.queryBaseObjectWithJdbc(getConn(),
                 "select count(*) from test2 where id in(?,?)", "test3.1", "test3.2");
-        System.out.println(n2);
+        assertEquals(0,n2);
     }
 }

@@ -5,18 +5,23 @@ import java.util.Collection;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.junit.Test;
 import org.wowtools.common.pcm.ltp.LtpPcmTask;
 import org.wowtools.common.pcm.ltp.LtpProducer;
 import org.wowtools.common.utils.AsyncTaskUtil;
 
+import static org.junit.Assert.assertEquals;
+
 public class PcmTest {
+
+    private static final int _surplus = 5;
 
     private static final Random r = new Random(233);
 
     private static class TestProducer implements LtpProducer<Integer> {
         String name;
         int i = 0;
-        int surplus = 5;
+        int surplus = _surplus;
 
         @Override
         public Integer produce() {
@@ -37,6 +42,7 @@ public class PcmTest {
     }
 
     private static class TestCustomer implements Customer<Integer> {
+        private static final AtomicInteger count = new AtomicInteger(0);
         String name;
 
         @Override
@@ -46,10 +52,12 @@ public class PcmTest {
             } catch (InterruptedException e) {
             }
             System.out.println(name + "消费" + obj);
+            count.addAndGet(1);
         }
     }
 
-    public static void main(String[] args) {
+    @Test
+    public void main() {
         Collection<LtpProducer<Integer>> producers = new ArrayList<>(2);
         TestProducer p1 = new TestProducer();
         p1.i = 100;
@@ -73,6 +81,7 @@ public class PcmTest {
         LtpPcmTask<Integer> task = new LtpPcmTask<>(producers, customers, 5, 1000);
         task.startTask(true);
         System.out.println("end");
+        assertEquals(_surplus * 2, TestCustomer.count.get());
         AsyncTaskUtil.shutdown();
     }
 

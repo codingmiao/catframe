@@ -1,6 +1,7 @@
 package org.wowtools.common.utils;
 
 import junit.framework.TestCase;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -11,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class AsyncTaskUtilTest extends TestCase {
+    @Test
     public void testExecuteAsyncTasksAndReturn() throws Exception {
         int n = 10;
         AtomicInteger nn = new AtomicInteger(0);
@@ -29,7 +31,7 @@ public class AsyncTaskUtilTest extends TestCase {
         AsyncTaskUtil.executeAsyncTasks(tasks, true);
         assertEquals(n, nn.get());
     }
-
+    @Test
     public void testExecuteAsyncTasks() throws Exception {
         int n = 10;
         Random r = new Random(233);
