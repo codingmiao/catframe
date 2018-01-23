@@ -280,6 +280,7 @@ public class SqlUtil {
         PreparedStatement pstm = null;
         ResultSet rs = null;
         try {
+            conn.setReadOnly(true);
             pstm = conn.prepareStatement(sql);
             int i = 1;
             for (Object arg : args) {
@@ -297,6 +298,11 @@ public class SqlUtil {
         } finally {
             closeResultSet(rs);
             closePreparedStatement(pstm);
+            try {
+                conn.setReadOnly(false);
+            } catch (SQLException e) {
+                log.warn(" conn.setReadOnly(false)失败",e);
+            }
             closeConnection(conn);
         }
     }
@@ -310,6 +316,7 @@ public class SqlUtil {
      */
     public static ResultSet queryResultSet(Connection conn, String sql, Object... args) {
         try {
+            conn.setReadOnly(true);
             PreparedStatement pstm = conn.prepareStatement(sql);
             int i = 1;
             for (Object arg : args) {
@@ -322,6 +329,11 @@ public class SqlUtil {
                 public void close() {
                     closeResultSet(this.rs);
                     closePreparedStatement(pstm);
+                    try {
+                        conn.setReadOnly(false);
+                    } catch (SQLException e) {
+                        log.warn(" conn.setReadOnly(false)失败",e);
+                    }
                     closeConnection(conn);
                 }
             };
