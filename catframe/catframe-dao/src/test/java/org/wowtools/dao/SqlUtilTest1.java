@@ -1,6 +1,7 @@
 package org.wowtools.dao;
 
 import org.h2.tools.Server;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -14,13 +15,13 @@ import static org.junit.Assert.*;
  * @date 2017/5/16
  */
 public class SqlUtilTest1 {
-
+    @Before
+    public void init(){
+        TcpServerCell.init();
+    }
 
     @Test
     public void t() throws Exception {
-        Server tcpServer = Server
-                .createTcpServer(new String[]{"-tcpPort", "6999", "-tcpAllowOthers"});
-        tcpServer.start();
 
         ConnectionPool dbPool = ConnectionPool.getOrInitInstance(ConnectionPoolTest1.class, "jdbccfg.json");
         SqlUtil.executeUpdate(dbPool.getConnection(), "CREATE TABLE TEST1(ID VARCHAR(200))");

@@ -1,6 +1,7 @@
 package org.wowtools.dao;
 
 import org.h2.jdbcx.JdbcConnectionPool;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,8 +30,16 @@ public class TransactionalSqlUtilTest {
 
     @Before
     public void init() {
-        SqlUtil.executeUpdate(getConn(), "CREATE TABLE TEST1(ID VARCHAR(255))");
-        SqlUtil.executeUpdate(getConn(), "CREATE TABLE TEST2(ID VARCHAR(255))");
+        try {
+            SqlUtil.executeUpdate(getConn(), "CREATE TABLE TEST1(ID VARCHAR(255))");
+        } catch (Exception e) {
+        }
+        try {
+            SqlUtil.executeUpdate(getConn(), "CREATE TABLE TEST2(ID VARCHAR(255))");
+        } catch (Exception e) {
+        }
+        SqlUtil.executeUpdate(getConn(), "delete from TEST1");
+        SqlUtil.executeUpdate(getConn(), "delete from TEST2");
     }
 
     @Test
@@ -97,5 +106,10 @@ public class TransactionalSqlUtilTest {
         long n2 = SqlUtil.queryBaseObjectWithJdbc(getConn(),
                 "select count(*) from test2 where id in(?,?)", "test3.1", "test3.2");
         assertEquals(0,n2);
+    }
+
+    @After
+    public void close(){
+        connectionPool.dispose();
     }
 }
