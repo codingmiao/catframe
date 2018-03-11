@@ -8,12 +8,12 @@
     </parent>
     <artifactId>catframe-dao</artifactId>
     <description>catframe-数据库操作</description>
-    <version>1.4STABLE</version>
+    <version>1.4.2</version>
     <dependencies>
         <dependency>
             <groupId>org.wowtools</groupId>
             <artifactId>catframe-common</artifactId>
-            <version>1.4STABLE</version>
+            <version>1.4.2</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

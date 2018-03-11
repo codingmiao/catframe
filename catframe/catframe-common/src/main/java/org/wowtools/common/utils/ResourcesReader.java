@@ -1,9 +1,6 @@
 package org.wowtools.common.utils;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 
 
@@ -76,6 +73,10 @@ public class ResourcesReader {
             realPath = java.net.URLDecoder.decode(realPath, "utf-8");
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+        int i = realPath.indexOf("!");
+        if (i > 0) {
+            realPath = realPath.substring(0, realPath.lastIndexOf(File.separator, i));
         }
         return realPath;
     }

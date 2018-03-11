@@ -8,7 +8,7 @@
     </parent>
     <artifactId>catframe-common</artifactId>
     <description>catframe-通用</description>
-    <version>1.4STABLE</version>
+    <version>1.4.2</version>
     <dependencies>
         <dependency>
             <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
