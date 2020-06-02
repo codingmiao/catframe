@@ -2,7 +2,7 @@
   "dataSourceName": "test",
   "user": "sa",
   "password": "sa",
-  "jdbcUrl": "jdbc:h2:tcp://localhost:6999/mem:test",
+  "jdbcUrl": "jdbc:h2:~/test",
   "driverClass": "org.h2.Driver",
   "minPoolSize": 0,
   "maxPoolSize": 10,

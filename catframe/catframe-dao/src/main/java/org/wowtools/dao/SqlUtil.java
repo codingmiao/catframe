@@ -3,8 +3,6 @@ package org.wowtools.dao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import java.sql.*;
 import java.util.Collection;
 import java.util.Date;
@@ -19,18 +17,86 @@ public class SqlUtil {
     private static final Logger log = LoggerFactory.getLogger(SqlUtil.class);
 
     /**
-     * ResultSet遍历器
+     * jdbc查询模板，包含查询中的各个关键步骤模板方法
      *
      * @author liuyu
      */
-    public static abstract class JdbcResultVisitor {
+    public static abstract class JdbcQueryTemplate {
+        /**
+         * fetchSize，默认取1w，若需要修改请在初始化完成后修改，查询开始后无效
+         */
+        public int fetchSize = 10000;
+
+        /**
+         * 构建PreparedStatement对象
+         *
+         * @param conn
+         * @param sql
+         * @return
+         * @throws SQLException
+         */
+        public PreparedStatement prepareStatement(Connection conn, String sql) throws SQLException {
+            return conn.prepareStatement(sql);
+        }
+
+        /**
+         * 当PreparedStatement构造出来后执行，比如控制setFetchSize
+         *
+         * @param pstm
+         */
+        public void whenPreparedStatementCreated(PreparedStatement pstm) throws SQLException {
+            pstm.setFetchSize(fetchSize);
+        }
+
+        /**
+         * 开始循环前执行
+         *
+         * @param rs
+         * @throws SQLException
+         */
         public void beforLoop(ResultSet rs) throws SQLException {
+            rs.setFetchSize(fetchSize);
+        }
+
+        /**
+         * 遍历
+         *
+         * @param rs
+         * @throws SQLException
+         */
+        public abstract void visit(ResultSet rs) throws SQLException;
+
+        /**
+         * 循环结束后执行
+         *
+         * @param rs
+         * @throws SQLException
+         */
+        public void afterLoop(ResultSet rs) throws SQLException {
 
         }
 
-        public abstract void visit(ResultSet rs) throws SQLException;
+        /**
+         * 关闭结果集
+         * @param rs
+         */
+        public void closeResultSet(ResultSet rs) {
 
-        public void afterLoop(ResultSet rs) throws SQLException {
+        }
+
+        /**
+         * 关闭PreparedStatement
+         * @param pstm
+         */
+        public void closePreparedStatement(PreparedStatement pstm) {
+
+        }
+
+        /**
+         * 关闭连接
+         * @param conn
+         */
+        public void closeConnection(Connection conn) {
 
         }
     }
@@ -63,32 +129,6 @@ public class SqlUtil {
             sb.append(p == null ? "null" : p.toString()).append(",\t");
         }
         return sb.toString();
-    }
-
-    /**
-     * 执行hql CUD命令
-     *
-     * @param sql        sql
-     * @param paramValue 参数值
-     * @return the number of entities updated or deleted
-     */
-    public static int executeUpdateByNativeQuery(EntityManager em, String sql, Object[] paramValue) {
-        if (log.isDebugEnabled()) {
-            log.debug("executeUpdate:{}", getLogSqlAndParams(sql, paramValue));
-        }
-
-        try {
-            Query query = em.createNativeQuery(sql);
-            int i = 1;
-            for (Object p : paramValue) {
-                query.setParameter(i, p);
-                i++;
-            }
-
-            return query.executeUpdate();
-        } catch (Exception e) {
-            throw new SqlException(e, sql, paramValue);
-        }
     }
 
     /**
@@ -199,11 +239,10 @@ public class SqlUtil {
      * @return 结果
      */
     public static <T> T queryBaseObjectWithJdbc(Connection conn, final String sql, final Object... args) {
-        class Visitor extends JdbcResultVisitor {
+        class Visitor extends JdbcQueryTemplate {
             private int n = 0;
             private T res = null;
 
-            @SuppressWarnings("unchecked")
             @Override
             public void visit(ResultSet rs) throws SQLException {
                 if (n == 1) {
@@ -259,7 +298,7 @@ public class SqlUtil {
      */
     public static void queryWithJdbc(Connection conn, SimpleJdbcResultVisitor simpleRsVisitor, String sql,
                                      Object... args) {
-        JdbcResultVisitor rsVisitor = new JdbcResultVisitor() {
+        JdbcQueryTemplate rsVisitor = new JdbcQueryTemplate() {
             @Override
             public void visit(ResultSet rs) throws SQLException {
                 simpleRsVisitor.visit(rs);
@@ -276,12 +315,12 @@ public class SqlUtil {
      * @param sql       sql
      * @param args      绑定参数
      */
-    public static void queryWithJdbc(Connection conn, JdbcResultVisitor rsVisitor, String sql, Object... args) {
+    public static void queryWithJdbc(Connection conn, JdbcQueryTemplate rsVisitor, String sql, Object... args) {
         PreparedStatement pstm = null;
         ResultSet rs = null;
         try {
-            conn.setReadOnly(true);
-            pstm = conn.prepareStatement(sql);
+            pstm = rsVisitor.prepareStatement(conn, sql);
+            rsVisitor.whenPreparedStatementCreated(pstm);
             int i = 1;
             for (Object arg : args) {
                 pstm.setObject(i, toDbObj(arg));
@@ -298,11 +337,6 @@ public class SqlUtil {
         } finally {
             closeResultSet(rs);
             closePreparedStatement(pstm);
-            try {
-                conn.setReadOnly(false);
-            } catch (SQLException e) {
-                log.warn(" conn.setReadOnly(false)失败",e);
-            }
             closeConnection(conn);
         }
     }
@@ -316,24 +350,19 @@ public class SqlUtil {
      */
     public static ResultSet queryResultSet(Connection conn, String sql, Object... args) {
         try {
-            conn.setReadOnly(true);
             PreparedStatement pstm = conn.prepareStatement(sql);
             int i = 1;
             for (Object arg : args) {
                 pstm.setObject(i, toDbObj(arg));
                 i++;
             }
+            pstm.setFetchSize(10000);
             ResultSet rs = pstm.executeQuery();
             DecoratorResultSet drs = new DecoratorResultSet(rs) {
                 @Override
                 public void close() {
                     closeResultSet(this.rs);
                     closePreparedStatement(pstm);
-                    try {
-                        conn.setReadOnly(false);
-                    } catch (SQLException e) {
-                        log.warn(" conn.setReadOnly(false)失败",e);
-                    }
                     closeConnection(conn);
                 }
             };
